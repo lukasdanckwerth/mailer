@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := manual
-.SILENT: manual
+.SILENT: manual, install, remove
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 manual:
@@ -13,7 +13,8 @@ install:
 	sudo cp -nf "${ROOT_DIR}/mailer" /usr/local/bin/mailer
 	[ -d /etc/mailer ] || sudo mkdir /etc/mailer
 	[ -f /etc/mailer/mailer.conf ] || sudo cp "${ROOT_DIR}/mailer.conf" /etc/mailer/mailer.conf
+	sudo cp -nf "${ROOT_DIR}/mail.html" /etc/mailer/mail.html
 
 remove:
 	[ -f /usr/local/bin/mailer ] && sudo rm -rf /usr/local/bin/mailer
-	[ -f /etc/mailer.conf ] && sudo rm -rf /etc/mailer
+	[ -d /etc/mailer ] && sudo rm -rf /etc/mailer

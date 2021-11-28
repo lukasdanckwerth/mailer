@@ -26,7 +26,7 @@ get_remote_version() {
 }
 
 print_version() {
-  echo "$(cat "${ML_VERSION}")"
+  if [[ -f "${ML_VERSION}" ]]; then echo "$(cat "${ML_VERSION}")"; else echo ""; fi
 }
 
 # prints the help message
