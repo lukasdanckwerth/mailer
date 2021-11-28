@@ -84,10 +84,21 @@ if [[ "${MAIL_HEADLINE}" == "" ]]; then
   MAIL_HEADLINE="${MAIL_SUBJECT}"
 fi
 
+if [[ "${MAIL_FOOTER}" == "" ]]; then
+  MAIL_FOOTER="$(hostname)"
+fi
+
+echo "MAIL_CONTENT_FILE: ${MAIL_CONTENT_FILE}"
+
 if [[ ! "${MAIL_CONTENT}" == "" ]]; then
-  sed -i "s/__CONTENT__/${MAIL_FOOTER}/g" "${MS_TEMP_MAIL_HTML_FILE}"
+  sed -i "s/__CONTENT__/${MAIL_CONTENT}/g" "${MS_TEMP_MAIL_HTML_FILE}"
 elif [[ ! "${MAIL_CONTENT_FILE}" == "" ]]; then
-  sed -i -e "/__CONTENT__/{r $MAIL_CONTENT_FILE" -e "d}" "${MS_TEMP_MAIL_HTML_FILE}"
+  TMP_MAIL_CONTENT=$(cat "$MAIL_CONTENT_FILE")
+  TMP_MAIL_CONTENT=$(echo "${TMP_MAIL_CONTENT//$'\n'/<br />}")
+  TMP_FILE="/tmp/mailer-2-$(date +%s-%N).html"
+  echo "${TMP_MAIL_CONTENT}" > "${TMP_FILE}"
+  sed -i -e "/__CONTENT__/{r $TMP_FILE" -e "d}" "${MS_TEMP_MAIL_HTML_FILE}"
+  rm -rf "${TMP_FILE}"
 fi
 
 sed -i "s/__FROM__/${MAIL_FROM}/g" "${MS_TEMP_MAIL_HTML_FILE}"
