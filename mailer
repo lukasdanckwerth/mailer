@@ -4,40 +4,17 @@ set -e
 
 ML_VERSION="1.0"
 ML_GIT_REPO="https://github.com/lukasdanckwerth/bash-mailer.git"
-ML_GIT_TEMPLATE_URL="https://raw.githubusercontent.com/lukasdanckwerth/bash-mailer/main/mail.html2"
+ML_GIT_TEMPLATE_URL="https://raw.githubusercontent.com/lukasdanckwerth/bash-mailer/main/mail.html"
 ML_TEMPLATE="/etc/mailer/mail.html"
 ML_CONFIG="/etc/mailer/mailer.conf"
 ML_VERSION="/etc/mailer/mailer.version"
-MS_SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
 emph() {
   echo "\033[1m${*}\033[0m"
 }
 
-# prints the help message
-print_usage() {
-  echo -e "
-usage: mailer [<command>] [--help]
-
-   $(emph "--from") mail           Set the sender.
-   $(emph "--to") mail             Set the receiver.
-   $(emph "--subject") subject     Set the subject of the mail.
-   $(emph "--headline") headline   Set the headline inside the mail.
-   $(emph "--footer") footer       Set the footer inside the mail.
-
-   $(emph "--file") filepath       Set the content of mail from file.
-   $(emph "--text") text           Set the content of mail.
-
-   $(emph "--help, -h")            Print this help text and exit
-"
-}
-
 random_string() {
   echo $RANDOM | md5sum | head -c 32
-}
-
-temp_file() {
-  mkdir -p "tmp/mailer/" && echo "/tmp/mailer/$(date +%s-%N).html"
 }
 
 die() {
@@ -49,7 +26,30 @@ get_remote_version() {
 }
 
 print_version() {
-  die "$(ML_VERSION)"
+  echo "$(cat "${ML_VERSION}")"
+}
+
+# prints the help message
+print_usage() {
+  echo -e "
+usage: mailer [<command>] [<arguments>]
+
+COMMANDS:
+
+    $(emph "file") filepath         Set the content of mail from file.
+    $(emph "text") text             Set the content of mail.
+    $(emph "update")                Updates mailer. (Run as root)
+
+ARGUMENTS:
+
+    $(emph "--to") mail             Set the receiver.
+    $(emph "--subject") subject     Set the subject of the mail.
+    $(emph "--headline") headline   Set the headline inside the mail.
+    $(emph "--footer") footer       Set the footer inside the mail.
+
+    $(emph "--help, -h")            Print this help text and exit
+    $(emph "--version, -v")         Print version and exit
+"
 }
 
 download_mail_template() {
@@ -71,11 +71,10 @@ update_mailer() {
   UP_TMP_TARGET="/tmp/mailer-$(random_string)"
   git clone --quiet "${ML_GIT_REPO}" "${UP_TMP_TARGET}"
   pushd "${UP_TMP_TARGET}" >/dev/null
-  echo $(git rev-parse HEAD) > "${ML_VERSION}"
+  echo $(git rev-parse HEAD) >"${ML_VERSION}"
   make install
   popd >/dev/null
   rm -rf "${UP_TMP_TARGET}"
-  cat "${ML_VERSION}"
 }
 
 update_mail_template() {
@@ -102,6 +101,8 @@ MAIL_CONTENT_FILE=""
 MS_MAIL_TEMPLATE="/etc/mailer/mail.html"
 [[ -f "${MS_MAIL_TEMPLATE}" ]] || (echo "Missing file ${MS_MAIL_TEMPLATE}" && exit 0)
 
+[[ $# -eq 0 ]] && die "no arguments given"
+
 while (($# > 0)); do
   opt="${1}"
   shift
@@ -122,17 +123,22 @@ while (($# > 0)); do
     MAIL_FOOTER="${1}"
     shift
     ;;
-  --file)
-    MAIL_CONTENT_FILE="${1}"
-    shift
-    ;;
-  --text)
-    MAIL_CONTENT="${1}"
-    shift
-    ;;
   --help | -h)
     print_usage
     exit 0
+    ;;
+  --version | -v)
+    echo "local version:   $(print_version)"
+    echo "remote version:  $(get_remote_version)"
+    exit 0
+    ;;
+  file)
+    MAIL_CONTENT_FILE="${1}"
+    shift
+    ;;
+  text)
+    MAIL_CONTENT="${1}"
+    shift
     ;;
   update | u)
     update_mailer
@@ -142,24 +148,20 @@ while (($# > 0)); do
     update_mail_template
     exit 0
     ;;
-  version)
-    echo "get_remote_version: $(get_remote_version)"
-    exit 0
-    ;;
   *)
     die "Unknown command: '${opt}'.  Pass '--help' for a list of commands."
     ;;
   esac
 done
 
-MS_TEMP_MAIL_HTML_FILE="/tmp/mailer-$(date +%s-%N).html"
+[[ "${MAIL_TO}" == "" ]] && die "no receiver given"
 
+MS_TEMP_MAIL_HTML_FILE="/tmp/mailer-$(random_string).html"
 cat ${MS_MAIL_TEMPLATE} >>"${MS_TEMP_MAIL_HTML_FILE}"
 
-# cat "${MS_SCRIPT_DIR}/templates/startup.html" >>"${MS_TEMP_MAIL_CONTENT_HTML_FILE}"
-# sed -i "s/__DATE__/$(date '+%d.%m.%Y %T')/g" "${MS_TEMP_MAIL_CONTENT_HTML_FILE}"
-# sed -i "s/__HOSTNAME__/$(hostname)/g" "${MS_TEMP_MAIL_CONTENT_HTML_FILE}"
-# sed -i -e "/__CONTENT__/{r $MS_TEMP_MAIL_CONTENT_HTML_FILE" -e "d}" "${MS_TEMP_MAIL_HTML_FILE}"
+if [[ "${MAIL_SUBJECT}" == "" ]]; then
+  MAIL_SUBJECT="Mailer"
+fi
 
 if [[ "${MAIL_HEADLINE}" == "" ]]; then
   MAIL_HEADLINE="${MAIL_SUBJECT}"
@@ -169,17 +171,17 @@ if [[ "${MAIL_FOOTER}" == "" ]]; then
   MAIL_FOOTER="$(hostname)"
 fi
 
-echo "MAIL_CONTENT_FILE: ${MAIL_CONTENT_FILE}"
-
 if [[ ! "${MAIL_CONTENT}" == "" ]]; then
   sed -i "s/__CONTENT__/${MAIL_CONTENT}/g" "${MS_TEMP_MAIL_HTML_FILE}"
 elif [[ ! "${MAIL_CONTENT_FILE}" == "" ]]; then
+
   TMP_MAIL_CONTENT=$(cat "$MAIL_CONTENT_FILE")
   TMP_MAIL_CONTENT=$(echo "${TMP_MAIL_CONTENT//$'\n'/<br />}")
   TMP_FILE="/tmp/mailer-2-$(date +%s-%N).html"
   echo "${TMP_MAIL_CONTENT}" >"${TMP_FILE}"
   sed -i -e "/__CONTENT__/{r $TMP_FILE" -e "d}" "${MS_TEMP_MAIL_HTML_FILE}"
   rm -rf "${TMP_FILE}"
+
 fi
 
 sed -i "s/__FROM__/${MAIL_FROM}/g" "${MS_TEMP_MAIL_HTML_FILE}"
