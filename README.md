@@ -2,9 +2,10 @@
 
 ## Usage
 
+[usage-start]
+```
+```
 [whatever]: text
-```
-```
 
 ## Install
 
