@@ -58,9 +58,6 @@ git clone --quiet "${ML_GIT_REPO}" "${UP_TMP_TARGET}"
 
 pushd "${UP_TMP_TARGET}" >/dev/null
 
-log "Save version in ${ML_VERSION}"
-echo $(git rev-parse HEAD) >"${ML_VERSION}"
-
 log "Install ..."
 sudo make install
 
