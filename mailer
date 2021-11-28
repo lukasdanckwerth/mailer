@@ -82,6 +82,10 @@ while (($# > 0)); do
     MAIL_TO="${1}"
     shift
     ;;
+    --from)
+      MAIL_FROM="${1}"
+      shift
+      ;;
   --subject | -s)
     MAIL_SUBJECT="${1}"
     shift
