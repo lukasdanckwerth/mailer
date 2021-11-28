@@ -14,46 +14,24 @@ usage: mailer [<command>] [--help]
 "
 }
 
-log() {
-  echo -e "[mailer]  ${*}"
+temp_file() {
+  mkdir -p "tmp/mailer/" && echo "/tmp/mailer/$(date +%s-%N).html"
 }
 
-die() {
-  log "${*}" && exit 1
-}
+MAIL_FROM=""
+MAIL_TO=""
+MAIL_SUBJECT=""
+MAIL_HEADLINE=""
+MAIL_FOOTER=""
 
-load_template() {
-  cat "${MS_SCRIPT_DIR}/templates/${1}.html"
-}
+MAIL_CONTENT=""
+MAIL_CONTENT_FILE=""
 
-mail() {
-  MS_FROM="Hans <debug@wolke7.de>"
-  MS_TO=""
-  MS_SUBJECT="Start up"
-  MS_HEADLINE="${MS_SUBJECT}"
-  MS_FOOTER=""
+MS_CONFIG="/etc/mailer/mailer.conf"
+[[ -f "${MS_CONFIG}" ]] && source "${MS_CONFIG}"
 
-  MS_TEMP_MAIL_HTML_FILE="/tmp/mailer-$(date +%s-%N).html"
-  load_template "mail" >>"${MS_TEMP_MAIL_HTML_FILE}"
-  cat "${MS_TEMP_MAIL_HTML_FILE}"
-  exit 0
-
-  cp "${MS_SCRIPT_DIR}/mail.html" "${MS_TEMP_MAIL_HTML_FILE}"
-
-  sed -i "s/__FROM__/${MS_FROM}/g" "${MS_TEMP_MAIL_HTML_FILE}"
-  sed -i "s/__TO__/${MS_TO}/g" "${MS_TEMP_MAIL_HTML_FILE}"
-  sed -i "s/__SUBJECT__/${MS_SUBJECT}/g" "${MS_TEMP_MAIL_HTML_FILE}"
-  sed -i "s/__HEADLINE__/${MS_HEADLINE}/g" "${MS_TEMP_MAIL_HTML_FILE}"
-  sed -i "s/__FOOTER__/${MS_FOOTER}/g" "${MS_TEMP_MAIL_HTML_FILE}"
-
-  send_file_at "${MS_TEMP_MAIL_HTML_FILE}"
-
-  rm -rf "${MS_TEMP_MAIL_HTML_FILE}"
-}
-
-send_file_at() {
-  /usr/sbin/sendmail -t <"${1}"
-}
+MS_MAIL_TEMPLATE="/etc/mailer/mail.html"
+[[ -f "${MS_MAIL_TEMPLATE}" ]] || (echo "Missing file ${MS_MAIL_TEMPLATE}" && exit 0)
 
 while (($# > 0)); do
   opt="${1}"
@@ -64,7 +42,27 @@ while (($# > 0)); do
     exit 0
     ;;
   --to | -t)
-    MAIL_TO="${2}"
+    MAIL_TO="${1}"
+    shift
+    ;;
+  --subject | -s)
+    MAIL_SUBJECT="${1}"
+    shift
+    ;;
+  --headline | -h)
+    MAIL_HEADLINE="${1}"
+    shift
+    ;;
+  --footer | -ft)
+    MAIL_FOOTER="${1}"
+    shift
+    ;;
+  --file)
+    MAIL_CONTENT_FILE="${1}"
+    shift
+    ;;
+  --text)
+    MAIL_CONTENT="${1}"
     shift
     ;;
   *)
@@ -73,20 +71,31 @@ while (($# > 0)); do
   esac
 done
 
-MS_CONFIG="/etc/mailer.conf"
-[[ -f "${MS_CONFIG}" ]] && (. "${MS_CONFIG}")
+MS_TEMP_MAIL_HTML_FILE="/tmp/mailer-$(date +%s-%N).html"
 
-echo "MAIL_TO: ${MAIL_TO}"
-# MS_TEMP_MAIL_CONTENT_HTML_FILE="/tmp/mailer-$(date +%s-%N).content.html"
-
-# create HTML
+cat ${MS_MAIL_TEMPLATE} >> "${MS_TEMP_MAIL_HTML_FILE}"
 
 # cat "${MS_SCRIPT_DIR}/templates/startup.html" >>"${MS_TEMP_MAIL_CONTENT_HTML_FILE}"
 # sed -i "s/__DATE__/$(date '+%d.%m.%Y %T')/g" "${MS_TEMP_MAIL_CONTENT_HTML_FILE}"
 # sed -i "s/__HOSTNAME__/$(hostname)/g" "${MS_TEMP_MAIL_CONTENT_HTML_FILE}"
-
 # sed -i -e "/__CONTENT__/{r $MS_TEMP_MAIL_CONTENT_HTML_FILE" -e "d}" "${MS_TEMP_MAIL_HTML_FILE}"
 
-# replace values
+if [[ "${MAIL_HEADLINE}" == "" ]]; then
+  MAIL_HEADLINE="${MAIL_SUBJECT}"
+fi
 
-exit 0
+if [[ ! "${MAIL_CONTENT}" == "" ]]; then
+  sed -i "s/__CONTENT__/${MAIL_FOOTER}/g" "${MS_TEMP_MAIL_HTML_FILE}"
+elif [[ ! "${MAIL_CONTENT_FILE}" == "" ]]; then
+  sed -i -e "/__CONTENT__/{r $MAIL_CONTENT_FILE" -e "d}" "${MS_TEMP_MAIL_HTML_FILE}"
+fi
+
+sed -i "s/__FROM__/${MAIL_FROM}/g" "${MS_TEMP_MAIL_HTML_FILE}"
+sed -i "s/__TO__/${MAIL_TO}/g" "${MS_TEMP_MAIL_HTML_FILE}"
+sed -i "s/__SUBJECT__/${MAIL_SUBJECT}/g" "${MS_TEMP_MAIL_HTML_FILE}"
+sed -i "s/__HEADLINE__/${MAIL_HEADLINE}/g" "${MS_TEMP_MAIL_HTML_FILE}"
+sed -i "s/__FOOTER__/${MAIL_FOOTER}/g" "${MS_TEMP_MAIL_HTML_FILE}"
+
+/usr/sbin/sendmail -t <"${MS_TEMP_MAIL_HTML_FILE}"
+
+rm -rf "${MS_TEMP_MAIL_HTML_FILE}"
