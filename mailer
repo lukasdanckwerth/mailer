@@ -72,7 +72,7 @@ MAIL_CONTENT_FILE=""
 [[ -f "${ML_CONFIG}" ]] && source "${ML_CONFIG}"
 
 # guard template file condition
-[[ -f "${ML_TEMPLATE}" ]] || die "missing file ${MS_MAIL_TEMPLATE}"
+[[ -f "${ML_TEMPLATE}" ]] || die "missing file ${ML_TEMPLATE}"
 
 while (($# > 0)); do
   opt="${1}"
