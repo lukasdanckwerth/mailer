@@ -2,11 +2,15 @@
 set -u
 set -e
 
-ML_GIT_REPO="https://github.com/lukasdanckwerth/bash-mailer.git"
-ML_GIT_TEMPLATE_URL="https://raw.githubusercontent.com/lukasdanckwerth/bash-mailer/main/mail.html"
+ML_GIT_REPO="https://github.com/lukasdanckwerth/mailer.git"
+ML_GIT_TEMPLATE_URL="https://raw.githubusercontent.com/lukasdanckwerth/mailer/main/mail.html"
 ML_TEMPLATE="/etc/mailer/mail.html"
 ML_CONFIG="/etc/mailer/mailer.conf"
 ML_VERSION="/etc/mailer/mailer.version"
+
+log() {
+  echo "[install-mailer.sh]  ${*}"
+}
 
 emph() {
   echo "\033[1m${*}\033[0m"
@@ -17,7 +21,7 @@ random_string() {
 }
 
 die() {
-  echo -e "${*}" && exit 0
+  log "${*}" && exit 0
 }
 
 get_remote_version() {

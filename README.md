@@ -26,10 +26,11 @@ ARGUMENTS:
 ```
 [mark-usage-end]::
 
+
 ## Install
 
-##### Install `mailer` with ([`install-mailer.sh`](https://raw.githubusercontent.com/lukasdanckwerth/bash-mailer/main/install-mailer.sh)) script
+##### Install `mailer` with ([`install-mailer.sh`](https://raw.githubusercontent.com/lukasdanckwerth/mailer/main/install-mailer.sh)) script
 
 ```shell
-sudo /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/lukasdanckwerth/bash-mailer/main/install-mailer.sh)"
+sudo /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/lukasdanckwerth/mailer/main/install-mailer.sh)"
 ```
