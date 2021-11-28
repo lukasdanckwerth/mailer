@@ -124,6 +124,7 @@ done
 # guard receiver existence
 [[ "${MAIL_TO}" == "" ]] && die "no receiver given"
 
+# temporary working file
 ML_WORKING_HTML_FILE="/tmp/mailer-$(random_string).html"
 cat ${ML_TEMPLATE} >>"${ML_WORKING_HTML_FILE}"
 

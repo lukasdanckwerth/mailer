@@ -2,7 +2,7 @@
 .SILENT: install remove
 .ONESHELL: install remove
 
-ML_ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+ML_ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 ML_LOCAL_VER := $(shell grep -hs ^ /etc/mailer/.version)
 ML_REMOTE_VER := $(shell git rev-parse HEAD)
 ML_USER := $(shell whoami)
@@ -18,7 +18,8 @@ ifeq ($(ML_LOCAL_VER),$(ML_REMOTE_VER))
 endif
 
 	echo "[install]  copy mailer to /usr/local/bin/mailer"
-	cp -nf "${ML_ROOT_DIR}/mailer" /usr/local/bin/mailer
+	sudo rm -rf /usr/local/bin/mailer
+	sudo cp -nf "${ML_ROOT_DIR}/mailer" /usr/local/bin/mailer
 
 	echo "[install]  configure /etc/mailer directory"
 	[ -d /etc/mailer ] || sudo mkdir /etc/mailer
@@ -27,7 +28,8 @@ endif
 	[ -f /etc/mailer/mailer.conf ] || sudo cp "${ML_ROOT_DIR}/mailer.conf" /etc/mailer/mailer.conf
 
 	echo "[install]  copy mail template"
-	cp -nf "${ML_ROOT_DIR}/mail.html" /etc/mailer/mail.html
+	sudo rm -rf /etc/mailer/mail.html
+	sudo cp -nf "${ML_ROOT_DIR}/mail.html" /etc/mailer/mail.html
 
 	sudo git rev-parse HEAD >/etc/mailer/.version
 	echo "[install]  installed version:" $(ML_REMOTE_VER)

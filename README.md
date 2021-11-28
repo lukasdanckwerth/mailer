@@ -29,8 +29,20 @@ ARGUMENTS:
 
 ## Install
 
-##### Install `mailer` with ([`install-mailer.sh`](https://raw.githubusercontent.com/lukasdanckwerth/mailer/main/install-mailer.sh)) script
+#### Install `mailer` with ([`install-mailer.sh`](https://raw.githubusercontent.com/lukasdanckwerth/mailer/main/install-mailer.sh)) script
 
 ```shell
 sudo /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/lukasdanckwerth/mailer/main/install-mailer.sh)"
+```
+
+#### Manual install
+```shell
+# clone project
+$ git clone https://github.com/lukasdanckwerth/mailer.git
+
+# change into directory
+$ cd mailer && git status
+
+# install
+$ sudo make install
 ```
