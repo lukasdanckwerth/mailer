@@ -123,8 +123,8 @@ done
 
 [[ "${MAIL_TO}" == "" ]] && die "no receiver given"
 
-MS_TEMP_MAIL_HTML_FILE="/tmp/mailer-$(random_string).html"
-cat ${MS_MAIL_TEMPLATE} >>"${MS_TEMP_MAIL_HTML_FILE}"
+ML_WORKING_HTML_FILE="/tmp/mailer-$(random_string).html"
+cat ${ML_TEMPLATE} >>"${ML_WORKING_HTML_FILE}"
 
 if [[ "${MAIL_SUBJECT}" == "" ]]; then
   MAIL_SUBJECT="Mailer"
@@ -139,24 +139,24 @@ if [[ "${MAIL_FOOTER}" == "" ]]; then
 fi
 
 if [[ ! "${MAIL_CONTENT}" == "" ]]; then
-  sed -i "s/__CONTENT__/${MAIL_CONTENT}/g" "${MS_TEMP_MAIL_HTML_FILE}"
+  sed -i "s/__CONTENT__/${MAIL_CONTENT}/g" "${ML_WORKING_HTML_FILE}"
 elif [[ ! "${MAIL_CONTENT_FILE}" == "" ]]; then
 
   TMP_MAIL_CONTENT=$(cat "$MAIL_CONTENT_FILE")
   TMP_MAIL_CONTENT=$(echo "${TMP_MAIL_CONTENT//$'\n'/<br />}")
   TMP_FILE="/tmp/mailer-2-$(date +%s-%N).html"
   echo "${TMP_MAIL_CONTENT}" >"${TMP_FILE}"
-  sed -i -e "/__CONTENT__/{r $TMP_FILE" -e "d}" "${MS_TEMP_MAIL_HTML_FILE}"
+  sed -i -e "/__CONTENT__/{r $TMP_FILE" -e "d}" "${ML_WORKING_HTML_FILE}"
   rm -rf "${TMP_FILE}"
 
 fi
 
-sed -i "s/__FROM__/${MAIL_FROM}/g" "${MS_TEMP_MAIL_HTML_FILE}"
-sed -i "s/__TO__/${MAIL_TO}/g" "${MS_TEMP_MAIL_HTML_FILE}"
-sed -i "s/__SUBJECT__/${MAIL_SUBJECT}/g" "${MS_TEMP_MAIL_HTML_FILE}"
-sed -i "s/__HEADLINE__/${MAIL_HEADLINE}/g" "${MS_TEMP_MAIL_HTML_FILE}"
-sed -i "s/__FOOTER__/${MAIL_FOOTER}/g" "${MS_TEMP_MAIL_HTML_FILE}"
+sed -i "s/__FROM__/${MAIL_FROM}/g" "${ML_WORKING_HTML_FILE}"
+sed -i "s/__TO__/${MAIL_TO}/g" "${ML_WORKING_HTML_FILE}"
+sed -i "s/__SUBJECT__/${MAIL_SUBJECT}/g" "${ML_WORKING_HTML_FILE}"
+sed -i "s/__HEADLINE__/${MAIL_HEADLINE}/g" "${ML_WORKING_HTML_FILE}"
+sed -i "s/__FOOTER__/${MAIL_FOOTER}/g" "${ML_WORKING_HTML_FILE}"
 
-/usr/sbin/sendmail -t <"${MS_TEMP_MAIL_HTML_FILE}"
+/usr/sbin/sendmail -t <"${ML_WORKING_HTML_FILE}"
 
-rm -rf "${MS_TEMP_MAIL_HTML_FILE}"
+rm -rf "${ML_WORKING_HTML_FILE}"
