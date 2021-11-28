@@ -4,6 +4,7 @@ set -e
 
 ML_VERSION="1.0"
 ML_GIT_REPO="https://github.com/lukasdanckwerth/mailer.git"
+ML_GIT_INSTALL_SCRIPT="https://raw.githubusercontent.com/lukasdanckwerth/mailer/main/install-mailer.sh"
 ML_GIT_TEMPLATE_URL="https://raw.githubusercontent.com/lukasdanckwerth/mailer/main/mail.html"
 ML_TEMPLATE="/etc/mailer/mail.html"
 ML_CONFIG="/etc/mailer/mailer.conf"
@@ -29,6 +30,10 @@ print_version() {
   if [[ -f "${ML_VERSION}" ]]; then echo "$(cat "${ML_VERSION}")"; else echo ""; fi
 }
 
+update_mailer() {
+  sudo /bin/bash -c "$(curl -fsSL "${ML_GIT_INSTALL_SCRIPT}")"
+}
+
 # prints the help message
 print_usage() {
   echo -e "
@@ -38,7 +43,7 @@ COMMANDS:
 
     $(emph "file") filepath         Set the content of mail from file.
     $(emph "text") text             Set the content of mail.
-    $(emph "update")                Updates mailer. (Run as root)
+    $(emph "update")                Updates mailer.
 
 ARGUMENTS:
 
@@ -50,22 +55,6 @@ ARGUMENTS:
     $(emph "--help, -h")            Print this help text and exit
     $(emph "--version, -v")         Print version and exit
 "
-}
-
-download_mail_template() {
-  [[ -f "${ML_TEMPLATE}" ]] && die "template $(emph "${ML_TEMPLATE}") already existing"
-  [[ "$(whoami)" == "root" ]] || die "$(emph "update-template") must be run as root"
-  [[ "$(which curl)" == "" ]] && die "$(emph "curl") not found"
-  DL_TMP_TARGET="/tmp/mailer-$(random_string)"
-  curl "${ML_GIT_TEMPLATE_URL}" --out "${DL_TMP_TARGET}" --silent
-  [[ -f "${DL_TMP_TARGET}" ]] || die "can't download template"
-  cp -nf "${DL_TMP_TARGET}" "${ML_TEMPLATE}"
-  rm -rf "${DL_TMP_TARGET}"
-  [[ -f "${ML_TEMPLATE}" ]] || die "can't create template at: ${ML_TEMPLATE}"
-}
-
-update_mailer() {
-  sudo /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/lukasdanckwerth/mailer/main/install-mailer.sh)"
 }
 
 MAIL_FROM=""
