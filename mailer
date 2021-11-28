@@ -121,6 +121,7 @@ while (($# > 0)); do
   esac
 done
 
+# guard receiver existence
 [[ "${MAIL_TO}" == "" ]] && die "no receiver given"
 
 ML_WORKING_HTML_FILE="/tmp/mailer-$(random_string).html"
