@@ -37,9 +37,11 @@ IM_LOCAL_VER="$(local_version)"
 [[ "$(which git)" == "" ]] && die "$(emph "git") not found"
 [[ "${IM_REMOTE_VER}" == "${IM_LOCAL_VER}" && ! "$*" == *--force* ]] && die "already up to date"
 
-log "" && log "$(emph "UPDATE AVAILABLE")" && log ""
-log "CURRENT:   $(emph "${IM_LOCAL_VER}")"
-log "NEW:       $(emph "${IM_REMOTE_VER}")" && log ""
+if [[ ! "${IM_LOCAL_VER}" == "" ]]; then
+  log "" && log "$(emph "UPDATE AVAILABLE")" && log ""
+  log "CURRENT:   $(emph "${IM_LOCAL_VER}")"
+  log "NEW:       $(emph "${IM_REMOTE_VER}")" && log ""
+fi
 
 log "Do you want to install the update (y/n)?"
 read -r -p "" IM_INSTALL_CONTROL

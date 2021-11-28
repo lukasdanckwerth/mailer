@@ -52,7 +52,7 @@ ARGUMENTS:
 
     $(emph "--help, -h")            Print this help text and exit
     $(emph "--version, -v")         Print version and exit
-    
+
 "
 }
 
