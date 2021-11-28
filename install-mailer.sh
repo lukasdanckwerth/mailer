@@ -7,11 +7,11 @@ ML_DIR="/etc/mailer"
 ML_VERSION="${ML_DIR}/.version"
 
 log() {
-  echo "[install-mailer.sh]  ${*}"
+  echo "[mailer]  ${*}"
 }
 
 emph() {
-  echo "\033[1m${*}\033[0m"
+  echo -e "\033[1m${*}\033[0m"
 }
 
 random_string() {
@@ -30,8 +30,6 @@ local_version() {
   if [[ -f "${ML_VERSION}" ]]; then echo "$(cat "${ML_VERSION}")"; else echo ""; fi
 }
 
-log "checking preconditions..."
-
 IM_REMOTE_VER="$(remote_version)"
 IM_LOCAL_VER="$(local_version)"
 
@@ -39,24 +37,30 @@ IM_LOCAL_VER="$(local_version)"
 [[ "$(which git)" == "" ]] && die "$(emph "git") not found"
 [[ "${IM_REMOTE_VER}" == "${IM_LOCAL_VER}" && ! "$*" == *--force* ]] && die "already up to date"
 
-log "new version available" && log ""
-log "current version: ${IM_LOCAL_VER}"
-log "NEW version: ${IM_REMOTE_VER}"
+log "" && log "$(emph "UPDATE AVAILABLE")" && log ""
+log "CURRENT:   $(emph "${IM_LOCAL_VER}")"
+log "NEW:       $(emph "${IM_REMOTE_VER}")" && log ""
 
-read -r -p "Do you want to install the update (y/n)? " IM_INSTALL_CONTROL
-[[ "${IM_INSTALL_CONTROL}" == "y" ]] || die "user aborted"
+log "Do you want to install the update (y/n)?"
+read -r -p "" IM_INSTALL_CONTROL
+[[ "${IM_INSTALL_CONTROL}" == "y" ]] || exit 0
 
 UP_TMP_TARGET="/tmp/mailer-$(random_string)"
 log "temp repo directory: ${UP_TMP_TARGET}"
 
-log "clone repo..."
+log "Cloning repo ${ML_GIT_REPO} ..."
+log "... into ${UP_TMP_TARGET}"
 git clone --quiet "${ML_GIT_REPO}" "${UP_TMP_TARGET}"
+
 pushd "${UP_TMP_TARGET}" >/dev/null
+
+log "Save version in ${ML_VERSION}"
 echo $(git rev-parse HEAD) >"${ML_VERSION}"
 
-log "install..."
+log "Install ..."
 sudo make install
+
 popd >/dev/null
 
-log "clean up..."
+log "Remove ${UP_TMP_TARGET}"
 rm -rf "${UP_TMP_TARGET}"
