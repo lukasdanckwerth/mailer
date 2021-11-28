@@ -7,7 +7,7 @@ ML_GIT_REPO="https://github.com/lukasdanckwerth/mailer.git"
 ML_GIT_TEMPLATE_URL="https://raw.githubusercontent.com/lukasdanckwerth/mailer/main/mail.html"
 ML_TEMPLATE="/etc/mailer/mail.html"
 ML_CONFIG="/etc/mailer/mailer.conf"
-ML_VERSION="/etc/mailer/mailer.version"
+ML_VERSION="/etc/mailer/.version"
 
 emph() {
   echo "\033[1m${*}\033[0m"
@@ -65,26 +65,7 @@ download_mail_template() {
 }
 
 update_mailer() {
-  [[ "$(whoami)" == "root" ]] || die "$(emph "update") must be run as root"
-  [[ "$(which git)" == "" ]] && die "$(emph "git") not found"
-  [[ "$(get_remote_version)" == "$(cat "${ML_VERSION}")" ]] && die "already up to date"
-  UP_TMP_TARGET="/tmp/mailer-$(random_string)"
-  git clone --quiet "${ML_GIT_REPO}" "${UP_TMP_TARGET}"
-  pushd "${UP_TMP_TARGET}" >/dev/null
-  echo $(git rev-parse HEAD) >"${ML_VERSION}"
-  make install
-  popd >/dev/null
-  rm -rf "${UP_TMP_TARGET}"
-}
-
-update_mail_template() {
-  download_mail_template
-}
-
-guard_template_existence() {
-  echo "guard_template_existence"
-  [[ -f "${ML_TEMPLATE}}" ]] && return
-  echo "not existing"
+  sudo /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/lukasdanckwerth/mailer/main/install-mailer.sh)"
 }
 
 MAIL_FROM=""
@@ -96,12 +77,14 @@ MAIL_FOOTER=""
 MAIL_CONTENT=""
 MAIL_CONTENT_FILE=""
 
+# exit when no arguments given
+[[ $# -eq 0 ]] && die "no arguments given"
+
+# if config file is existing source it
 [[ -f "${ML_CONFIG}" ]] && source "${ML_CONFIG}"
 
-MS_MAIL_TEMPLATE="/etc/mailer/mail.html"
-[[ -f "${MS_MAIL_TEMPLATE}" ]] || (echo "Missing file ${MS_MAIL_TEMPLATE}" && exit 0)
-
-[[ $# -eq 0 ]] && die "no arguments given"
+# guard template file condition
+[[ -f "${ML_TEMPLATE}" ]] || die "missing file ${MS_MAIL_TEMPLATE}"
 
 while (($# > 0)); do
   opt="${1}"
@@ -142,10 +125,6 @@ while (($# > 0)); do
     ;;
   update | u)
     update_mailer
-    exit 0
-    ;;
-  "update-templates" | ut)
-    update_mail_template
     exit 0
     ;;
   *)

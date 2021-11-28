@@ -1,6 +1,10 @@
 .DEFAULT_GOAL := manual
-.SILENT: manual, install, remove
+.SILENT: manual
+.ONESHELL: install
+
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+ML_DIR := "/etc/mailer"
+ML_USER := $(shell whoami)
 
 manual:
 	@echo "make <command>"
@@ -10,10 +14,16 @@ manual:
 	@echo ""
 
 install:
-	sudo cp -nf "${ROOT_DIR}/mailer" /usr/local/bin/mailer
+ifneq ($(ML_USER),root)
+	@echo "run as root"
+	exit
+endif
+
+	cp -nf "${ROOT_DIR}/mailer" /usr/local/bin/mailer
 	[ -d /etc/mailer ] || sudo mkdir /etc/mailer
 	[ -f /etc/mailer/mailer.conf ] || sudo cp "${ROOT_DIR}/mailer.conf" /etc/mailer/mailer.conf
-	sudo cp -nf "${ROOT_DIR}/mail.html" /etc/mailer/mail.html
+	cp -nf "${ROOT_DIR}/mail.html" /etc/mailer/mail.html
+	sudo git rev-parse HEAD >/etc/mailer/.version
 
 remove:
 	[ -f /usr/local/bin/mailer ] && sudo rm -rf /usr/local/bin/mailer
