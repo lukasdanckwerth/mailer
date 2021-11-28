@@ -31,9 +31,20 @@ local_version() {
 }
 
 log "checking preconditions..."
+
+IM_REMOTE_VER="$(remote_version)"
+IM_LOCAL_VER="$(local_version)"
+
 [[ "$(whoami)" == "root" ]] || die "$(emph "update") must be run as root"
 [[ "$(which git)" == "" ]] && die "$(emph "git") not found"
-[[ "$(remote_version)" == "$(local_version)" && ! "$*" == *--force* ]] && die "already up to date"
+[[ "${IM_REMOTE_VER}" == "${IM_LOCAL_VER}" && ! "$*" == *--force* ]] && die "already up to date"
+
+log "new version available" && log ""
+log "current version: ${IM_LOCAL_VER}"
+log "NEW version: ${IM_REMOTE_VER}"
+
+read -r -p "Do you want to install the update (y/n)? " IM_INSTALL_CONTROL
+[[ "${IM_INSTALL_CONTROL}" == "y" ]] || die "user aborted"
 
 UP_TMP_TARGET="/tmp/mailer-$(random_string)"
 log "temp repo directory: ${UP_TMP_TARGET}"
