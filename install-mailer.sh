@@ -41,9 +41,11 @@ if [[ ! "${IM_LOCAL_VER}" == "" ]]; then
   log "" && log "$(emph "UPDATE AVAILABLE")" && log ""
   log "CURRENT:   $(emph "${IM_LOCAL_VER}")"
   log "NEW:       $(emph "${IM_REMOTE_VER}")" && log ""
+  log "Do you want to install the update (y/n)?"
+else
+  log "Are you sure you want to insall mailer (y/n)?"
 fi
 
-log "Do you want to install the update (y/n)?"
 read -r -p "" IM_INSTALL_CONTROL
 [[ "${IM_INSTALL_CONTROL}" == "y" ]] || exit 0
 
