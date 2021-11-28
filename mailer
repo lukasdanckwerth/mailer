@@ -28,7 +28,7 @@ load_template() {
 
 mail() {
   MS_FROM="Hans <debug@wolke7.de>"
-  MS_TO="lukas.danckwerth@gmx.de"
+  MS_TO=""
   MS_SUBJECT="Start up"
   MS_HEADLINE="${MS_SUBJECT}"
   MS_FOOTER=""
